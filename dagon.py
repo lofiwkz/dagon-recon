@@ -18,12 +18,13 @@ def portScan():
     if args.ports != None:
         portscan.specificPortsScan(target=args.target, ports=args.ports)
     else:
-        print('Please, use "-p [port port ...]" to specif ports')
-        exit(0)
+        portscan.defaultPortScan(target=args.target)
+        #print('Please, use "-p [port port ...]" to specif ports')
+        #exit(0)
 
 # Main function
 def main():
-    print("Dagon Scanner v0.1.0\n")
+    print("Dagon Scanner v0.2.0\n")
     # Define a scan type
     match args.scantype:
         case "pscan":

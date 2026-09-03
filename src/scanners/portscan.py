@@ -1,6 +1,8 @@
 import socket
+from pathlib import Path
 
 class PortScan:
+
     # Get a target IPv4 address
     def getIp(self, target):
         res = socket.getaddrinfo(target, None, socket.AF_INET)
@@ -28,18 +30,42 @@ class PortScan:
 
     # Scan with specific ports
     def specificPortsScan(self, target, ports):
-        targetIp = self.getIp(target)
+        target_ip = self.getIp(target)
 
-        print(f"Starting port scan in {target}: {targetIp}")
+        print(f"Starting port scan in {target}: {target_ip}")
         for port in ports:
-            result = self.checkPort(target=targetIp, port=port)
+            result = self.checkPort(target=target_ip, port=port)
 
             if result:
-                print(f"{targetIp}\t\t{port}/tcp is open")
+                print(f"{target_ip}\t\t{port}/tcp is open")
             elif result == False:
-                print(f"{targetIp}\t\t{port}/tcp is closed")
+                print(f"{target_ip}\t\t{port}/tcp is closed")
         pass
-    
 
-    def teste(self):
-        print("Hello!")
+    # Scan with 1000 TCP ports
+    def defaultPortScan(self, target):
+        target_ip = self.getIp(target)
+
+        # Path to script
+        script_dir = Path(__file__).parent
+
+        # Opens the 1000 common ports file and performs a port scan.
+        print(f"Starting port scan in {target}: {target_ip}")
+        print("Scanning the 1000 common ports")
+        try:
+            with open(f"{script_dir.parent}/wordlists/common-1000-ports.txt") as file:
+                ports_services = file.readlines()
+
+                for line in ports_services:
+                    port = line.split(":")[0]
+                    service = line.split(":")[1].replace("\n", "")
+
+                    result = self.checkPort(target=target_ip, port=int(port))
+
+                    if result:
+                        print(f"{target_ip}\t{port}/tcp open {service}")
+                    elif result == False:
+                        pass
+        except FileNotFoundError:
+            print(f"\nError: No such file or directory: {script_dir.parent}/wordlists/common-1000-ports.txt")
+            print("Top 1000 common ports wordlist not found.")
