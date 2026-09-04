@@ -1,19 +1,28 @@
 import socket
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
+import sys
 
 class PortScan:
-    def __init__(self, threads):
+    # Terminal Messages
+    warning_mark = "\033[31m[ ! ]\033[0m"
+    ok_mark = "\033[32m[ + ]\033[0m"
+    interrupt_message = "\n\033[38;5;208m[!]\033[0m Scan interrupted by the user. See you later! :)"
+
+    def __init__(self, threads, verbose = False):
         # Limit threads
         self.threads = threads
+        self.verbose = verbose
 
 
     
     # Get a target IPv4 address
     def getIp(self, target):
-        res = socket.getaddrinfo(target, None, socket.AF_INET)
-        return res[2][4][0]
-
+        try:
+            res = socket.getaddrinfo(target, None, socket.AF_INET)
+            return res[2][4][0]
+        except socket.gaierror:
+            print(f"{self.warning_mark} Target [{target}] not known")
     
 
     # Get a possible service name in common wordlist
@@ -49,6 +58,7 @@ class PortScan:
         try:
             result = sock.connect_ex((target, port))
             sock.close()
+            
 
             if result == 0:
                 if service == None:
@@ -57,11 +67,14 @@ class PortScan:
                     if service == None:
                         service = "unknow"
 
-                print(f"{target}\t\t{port}/tcp is open {service}")
+                print(f"{self.ok_mark} {target}\t\t{port}/tcp is \033[32mopen\033[0m {service}")
+            else:
+                if self.verbose:
+                    print(f"[ - ] {target}\t\t{port}/tcp is closed")
 
         # Port greater than 65535 Error
         except OverflowError:
-            print(f"{target}\t\t{port}/tcp not found (Must be 0-65535)")
+            print(f"{self.warning_mark} {target}\t\t{port}/tcp not found (Must be 0-65535)")
 
 
 
@@ -70,10 +83,17 @@ class PortScan:
         # Get a target IPv4
         target_ip = self.getIp(host_target)
 
-        print(f"Starting port scan in {host_target}: {target_ip}")
-        with ThreadPoolExecutor(max_workers= self.threads) as executor:
-            for port in ports:
-                executor.submit(self.checkPort, target=target_ip, port=port)
+        if target_ip != None:
+            print(f"Starting port scan in {host_target}: {target_ip}")
+        try:
+            with ThreadPoolExecutor(max_workers= self.threads) as executor:
+                for port in ports:
+                    executor.submit(self.checkPort, target=target_ip, port=port)
+        except KeyboardInterrupt:
+            print(self.interrupt_message)
+
+            executor.shutdown(wait=False, cancel_futures=True)
+            sys.exit(0)
 
 
 
@@ -86,8 +106,9 @@ class PortScan:
         script_dir = Path(__file__).parent
 
         # Opens the 1000 common ports file and performs a port scan.
-        print(f"Starting port scan in {host_target}: {target_ip}")
-        print("Scanning the 1000 common ports")
+        if target_ip != None:
+            print(f"Starting port scan in {host_target}: {target_ip}")
+            print("Scanning the 1000 common ports")
         try:
             with open(f"{script_dir.parent}/wordlists/common-1000-ports.txt") as file:
                 ports_services = file.readlines()
@@ -102,8 +123,13 @@ class PortScan:
 
         # Error: File common-1000-ports.txt not found
         except FileNotFoundError:
-            print(f"\nError: No such file or directory: {script_dir.parent}/wordlists/common-1000-ports.txt")
-            print("Top 1000 common ports wordlist not found.")
+            print(f"\n{self.warning_mark} No such file or directory: {script_dir.parent}/wordlists/common-1000-ports.txt")
+            print(f"{self.warning_mark} Top 1000 common ports wordlist not found.")
+        except KeyboardInterrupt:
+            print(self.interrupt_message)
+
+            executor.shutdown(wait=False, cancel_futures=True)
+            sys.exit(0)
 
 
 
@@ -112,11 +138,19 @@ class PortScan:
         # Get a target IPv4
         target_ip = self.getIp(host_target)
 
-        print(f"Starting port scan in {host_target}: {target_ip}")
-        print("Checking all 65535 ports")
+        if target_ip != None:
+            print(f"Starting port scan in {host_target}: {target_ip}")
+            print("Checking all 65535 ports")
 
         # Control all threads
-        with ThreadPoolExecutor(max_workers= self.threads) as executor:
-            for port in range(65536):
-                # Start a thread to check a port
-                executor.submit(self.checkPort, target=target_ip, port=port)
+        try:
+            with ThreadPoolExecutor(max_workers= self.threads) as executor:
+                for port in range(65536):
+                    # Start a thread to check a port
+                    executor.submit(self.checkPort, target=target_ip, port=port)
+        
+        except KeyboardInterrupt:
+            print(self.interrupt_message)
+
+            executor.shutdown(wait=False, cancel_futures=True)
+            sys.exit(0)
