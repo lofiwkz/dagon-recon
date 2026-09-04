@@ -117,6 +117,6 @@ class PortScan:
 
         # Control all threads
         with ThreadPoolExecutor(max_workers= self.threads) as executor:
-            for port in range(65535):
+            for port in range(65536):
                 # Start a thread to check a port
                 executor.submit(self.checkPort, target=target_ip, port=port)
