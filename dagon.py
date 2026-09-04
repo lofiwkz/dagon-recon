@@ -8,19 +8,21 @@ parser = ArgumentParser("dagon.py [scantype] [target] [options...]\n\n")
 parser.add_argument("scantype", nargs="?", default="pscan", help="Scan Type (pscan)")
 parser.add_argument("target", help="Target address")
 parser.add_argument("-p", "--ports", type=int, nargs="*", help="Ports that must be checked.")
+parser.add_argument("-P", "--all-ports", action="store_true", help="Scan all 65535 ports.")
+parser.add_argument("-t", "--threads", type=int, default=50 ,help="Limit number of threads to execution. ( Default: 50 )")
 args = parser.parse_args()
 
 # Instances
-portscan = portscan.PortScan()
+portscan = portscan.PortScan(threads=args.threads)
 
 def portScan():
     # Specifc ports
     if args.ports != None:
-        portscan.specificPortsScan(target=args.target, ports=args.ports)
+        portscan.specificPortsScan(host_target=args.target, ports=args.ports)
+    elif args.all_ports:
+        portscan.scanAllPorts(host_target=args.target)
     else:
-        portscan.defaultPortScan(target=args.target)
-        #print('Please, use "-p [port port ...]" to specif ports')
-        #exit(0)
+        portscan.defaultPortScan(host_target=args.target)
 
 # Main function
 def main():
