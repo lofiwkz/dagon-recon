@@ -2,7 +2,7 @@
 
 A Python CLI tool for network scanning and reconnaissance.
 
-<summary>Information Summary</summary>
+## Summary
 
 * [About](#about)
 * [Features](#features)
