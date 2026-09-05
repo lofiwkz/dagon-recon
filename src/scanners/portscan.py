@@ -9,6 +9,8 @@ class PortScan:
     ok_mark = "\033[32m[ + ]\033[0m"
     interrupt_message = "\n\033[38;5;208m[!]\033[0m Scan interrupted by the user. See you later! :)"
 
+
+
     def __init__(self, threads, verbose = False):
         # Limit threads
         self.threads = threads
@@ -22,6 +24,7 @@ class PortScan:
             res = socket.getaddrinfo(target, None, socket.AF_INET)
             return res[2][4][0]
         except socket.gaierror:
+            # Address not found
             print(f"{self.warning_mark} Target [{target}] not known")
     
 
@@ -84,7 +87,7 @@ class PortScan:
         target_ip = self.getIp(host_target)
 
         if target_ip != None:
-            print(f"Starting port scan in {host_target}: {target_ip}")
+            print(f"\nStarting port scan in {host_target}: {target_ip}")
         try:
             with ThreadPoolExecutor(max_workers= self.threads) as executor:
                 for port in ports:
@@ -107,7 +110,7 @@ class PortScan:
 
         # Opens the 1000 common ports file and performs a port scan.
         if target_ip != None:
-            print(f"Starting port scan in {host_target}: {target_ip}")
+            print(f"\nStarting port scan in {host_target}: {target_ip}")
             print("Scanning the 1000 common ports")
         try:
             with open(f"{script_dir.parent}/wordlists/common-1000-ports.txt") as file:
@@ -139,7 +142,7 @@ class PortScan:
         target_ip = self.getIp(host_target)
 
         if target_ip != None:
-            print(f"Starting port scan in {host_target}: {target_ip}")
+            print(f"\nStarting port scan in {host_target}: {target_ip}")
             print("Checking all 65535 ports")
 
         # Control all threads

@@ -1,16 +1,34 @@
-from argparse import ArgumentParser
+from argparse import ArgumentParser, HelpFormatter
 from src.scanners import portscan
 
-# Argparse Instance
-parser = ArgumentParser("dagon.py [scantype] [target] [options...]\n\n")
+# Project Version
+version = "v0.2.5"
+print(f"Dagon Scanner {version}")
 
-# Script Arguments
-parser.add_argument("scantype", nargs="?", default="pscan", help="Scan Type (pscan)")
-parser.add_argument("target", help="Target address")
-parser.add_argument("-p", "--ports", type=int, nargs="*", help="Ports that must be checked.")
-parser.add_argument("-P", "--all-ports", action="store_true", help="Scan all 65535 ports.")
+# Custom Formatter for help spacing
+class CustomFormatter(HelpFormatter):
+    def __init__(self, prog):
+        super().__init__(prog, max_help_position=40, width=100)
+
+# Argparse Instance
+parser = ArgumentParser(
+    description="A CLI tool for network scanning and reconnaissance", 
+    usage="dagon.py [scantype] [target] [options...]",
+    formatter_class=CustomFormatter
+)
+
+# Script Main Arguments
+parser.add_argument("scantype", nargs="?", default="pscan", help="Scan Type (pscan: Port Scan)")
+parser.add_argument("target", help="Target IPv4 address or domain")
 parser.add_argument("-t", "--threads", type=int, default=50 ,help="Limit number of threads to execution. ( Default: 50 )")
 parser.add_argument("-v", "--verbose", action="store_true", help="Activate code verbosity")
+
+# Script Arguments Groups
+#Port Scan
+pscan_group = parser.add_argument_group(title="Port Scan",description="Arguments options for scantype: pscan")
+pscan_group.add_argument("-p", "--ports", type=int, nargs="*", help="Ports that must be checked.")
+pscan_group.add_argument("-P", "--all-ports", action="store_true", help="Scan all 65535 ports.")
+
 args = parser.parse_args()
 
 # Instances
@@ -27,7 +45,6 @@ def portScan():
 
 # Main function
 def main():
-    print("Dagon Scanner v0.2.3\n")
     # Define a scan type
     match args.scantype:
         case "pscan":
